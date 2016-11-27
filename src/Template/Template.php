@@ -114,13 +114,13 @@ class Template
 
             ob_start();
 
-            if (!$this->exists()) {
+            if ($this->exists()) {
+                include $this->path();
+            } else {
                 throw new LogicException(
                     'The template "' . $this->name->getName() . '" could not be found at "' . $this->path() . '".'
                 );
             }
-
-            include $this->path();
 
             $content = ob_get_clean();
 
@@ -210,7 +210,11 @@ class Template
      */
     protected function fetch($name, array $data = array())
     {
-        return $this->engine->render($name, $data);
+        $template = $this->engine->make($name);
+
+        $template->setSections($this->sections);
+
+        return $template->render(array_merge($data, $this->data));
     }
 
     /**
@@ -221,7 +225,7 @@ class Template
      */
     protected function insert($name, array $data = array())
     {
-        echo $this->engine->render($name, $data);
+        echo $this->fetch($name, $data);
     }
 
     /**
@@ -277,5 +281,16 @@ class Template
     protected function e($string, $functions = null)
     {
         return $this->escape($string, $functions);
+    }
+
+    /**
+     * @param array $sections
+     * @return $this
+     */
+    protected function setSections(array $sections)
+    {
+        $this->sections = $sections;
+
+        return $this;
     }
 }
